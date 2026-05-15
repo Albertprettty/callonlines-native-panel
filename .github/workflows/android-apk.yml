@@ -48,6 +48,19 @@ jobs:
         if: failure()
         run: tail -n 200 "$RUNNER_TEMP/gradle-build.log" || true
 
+      - name: Gradle failure summary
+        if: failure()
+        run: |
+          {
+            echo "### Gradle (últimas líneas + errores)"
+            echo ""
+            echo '```text'
+            grep -E "^e: |error: |FAILURE: |What went wrong:|> Task .*FAILED" "$RUNNER_TEMP/gradle-build.log" | tail -n 40 || true
+            echo ""
+            tail -n 80 "$RUNNER_TEMP/gradle-build.log" || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Upload Gradle log artifact (on failure)
         if: failure()
         uses: actions/upload-artifact@v4
