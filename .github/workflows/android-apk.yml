@@ -48,6 +48,14 @@ jobs:
         if: failure()
         run: tail -n 200 "$RUNNER_TEMP/gradle-build.log" || true
 
+      - name: Upload Gradle log artifact (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-build-log
+          path: ${{ runner.temp }}/gradle-build.log
+          if-no-files-found: ignore
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
