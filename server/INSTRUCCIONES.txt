@@ -1,0 +1,50 @@
+CallOnLines — API JSON + App nativa (Android)
+============================================
+
+1) SUBIR LA API AL SERVIDOR
+---------------------------
+- Copia la carpeta completa `server/api/` a tu hosting, por ejemplo:
+    public_html/app_api/
+  Debe quedar al mismo nivel que `vendor/` y `panel_cliente.php`:
+    public_html/
+      vendor/
+      panel_cliente.php
+      app_api/
+        index.php
+        config.php
+        lib/
+
+- Copia `config.sample.php` a `config.php` y edita:
+    'site_root' => ruta absoluta en disco a la carpeta public_html (donde está vendor/)
+    O deja: dirname(__DIR__) si app_api está en public_html/app_api (site_root = public_html)
+
+- Pon las claves Magnus y JWT SOLO con variables de entorno (recomendado) o en config.php:
+    CALLONLINES_MAGNUS_API_KEY
+    CALLONLINES_MAGNUS_SECRET_KEY
+    CALLONLINES_MAGNUS_PUBLIC_URL   (ej: https://tudominio.com/mbilling sin barra final o como use tu lib)
+    CALLONLINES_JWT_SECRET          (cadena larga aleatoria; OBLIGATORIO en producción)
+    CALLONLINES_SIP_HOST / CALLONLINES_SIP_PORT (opcional)
+
+- Prueba en el navegador o con curl:
+    POST https://tudominio.com/app_api/index.php?action=login
+    Body JSON: {"username":"tuuser","password":"tuclave"}
+
+- Endpoints:
+    POST index.php?action=login     JSON { username, password }
+    GET  index.php?action=me       Header: Authorization: Bearer <token>
+    POST index.php?action=callerid JSON { callerid }
+    POST index.php?action=password JSON { current_password, new_password, confirm_password }
+                                   (deja new_password y confirm_password vacíos para generar automática)
+
+2) APP ANDROID
+--------------
+- Abre la carpeta `android/` en Android Studio (Hedgehog o superior).
+- Edita `AppConfig.kt` y pon `API_BASE` apuntando a tu carpeta, ejemplo:
+    https://callonlines.com/app_api/
+- Sync Gradle y ejecuta en emulador o dispositivo.
+
+3) SEGURIDAD
+------------
+- Rota las claves Magnus si alguna vez quedaron en código PHP público.
+- Usa HTTPS siempre.
+- No compartas el JWT; la app lo guarda en almacenamiento privado de la app.
