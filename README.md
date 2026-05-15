@@ -1,12 +1,21 @@
 # CallOnLines — Panel cliente nativo + API JSON
 
-## Estado del repo (local)
+## APK lista para instalar (sin Android Studio en tu Mac)
 
-Este proyecto ya está en tu Mac con **Git inicializado** y el **primer commit** hecho:
+El Mac no tenía Java para compilar aquí; en su lugar el repo incluye **GitHub Actions**: cada `push` a `main` genera una **APK debug** que puedes bajar.
 
-**Ruta:** `~/Desktop/callonlines-native-panel`
+1. Sube los últimos cambios a GitHub:  
+   `cd ~/Desktop/callonlines-native-panel && git add -A && git commit -m "..." && git push`
+2. En el repo: pestaña **Actions** → workflow **Build Android APK** → abre la ejecución verde.
+3. En **Artifacts**, descarga **`callonlines-panel-debug`** (es un zip con `app-debug.apk`).
+4. Pasa el APK al teléfono e instálalo (en Android: permitir “fuentes desconocidas” o instalar por ADB).
 
-Desde aquí solo falta **crear el repositorio vacío en GitHub** y hacer `git push` (yo no puedo entrar a tu cuenta GitHub desde aquí). Los comandos están más abajo en la sección **Publicar en GitHub**.
+La APK **solo funcionará** si:
+
+- Subiste la API (`server/api/`) a la URL que pusiste en `AppConfig.kt` (por defecto `https://callonlines.com/app_api/`).
+- Existe `config.php` en el servidor con Magnus + `jwt_secret` bien configurados.
+
+Para otra URL de API, cambia `API_BASE` en `android/.../AppConfig.kt`, haz commit y push, y vuelve a descargar el artifact.
 
 ---
 
@@ -31,12 +40,9 @@ En [GitHub](https://github.com/new) crea un repositorio **vacío** (sin README) 
 En la terminal:
 
 ```bash
-cd ~/Desktop/CallOnLines-Native-API
-git init
-git add .
-git commit -m "Initial commit: API JSON + Android panel cliente"
-git branch -M main
+cd ~/Desktop/callonlines-native-panel
 git remote add origin https://github.com/TU_USUARIO/callonlines-native-panel.git
+git branch -M main
 git push -u origin main
 ```
 
@@ -50,7 +56,7 @@ git push -u origin main
 Opcional: instala [GitHub CLI](https://cli.github.com/) (`brew install gh`), ejecuta `gh auth login` y luego:
 
 ```bash
-cd ~/Desktop/CallOnLines-Native-API
+cd ~/Desktop/callonlines-native-panel
 gh repo create callonlines-native-panel --public --source=. --remote=origin --push
 ```
 
