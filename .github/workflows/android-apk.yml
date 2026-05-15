@@ -40,7 +40,13 @@ jobs:
 
       - name: Build debug APK
         working-directory: android
-        run: ./gradlew assembleDebug --stacktrace --no-daemon
+        run: |
+          set -o pipefail
+          ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 | tee "$RUNNER_TEMP/gradle-build.log"
+
+      - name: Gradle log (on failure)
+        if: failure()
+        run: tail -n 200 "$RUNNER_TEMP/gradle-build.log" || true
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4

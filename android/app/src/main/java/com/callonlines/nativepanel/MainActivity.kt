@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -411,17 +410,16 @@ private fun PanelRoute(
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.End,
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text("Panel del cliente", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                ui.me?.user?.display?.let { handle ->
-                    Text(handle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
-                }
-            }
             TextButton(onClick = { vm.refresh() }) {
                 Text("Actualizar")
+            }
+        }
+        Column(Modifier.fillMaxWidth()) {
+            Text("Panel del cliente", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            ui.me?.user?.display?.let { handle ->
+                Text(handle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
             }
         }
         TextButton(onClick = onLogout, modifier = Modifier.align(Alignment.End)) {
