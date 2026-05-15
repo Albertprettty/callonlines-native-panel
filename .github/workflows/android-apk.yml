@@ -37,8 +37,6 @@ jobs:
 
       - name: Setup Gradle (cache + validación wrapper)
         uses: gradle/actions/setup-gradle@v4
-        with:
-          build-root-directory: android
 
       - name: Build debug APK
         working-directory: android
