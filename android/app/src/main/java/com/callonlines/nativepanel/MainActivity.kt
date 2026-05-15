@@ -54,12 +54,13 @@ import com.callonlines.nativepanel.data.NetworkModule
 import com.callonlines.nativepanel.data.PanelRepository
 import com.callonlines.nativepanel.data.TokenStore
 import com.callonlines.nativepanel.ui.theme.CallOnLinesTheme
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
     private val tokenStore by lazy { TokenStore(this) }
-    private val repo by lazy { PanelRepository(NetworkModule.panelApi(), tokenStore) }
+    private val repo by lazy { PanelRepository(NetworkModule.panelApi(tokenStore), tokenStore) }
 
     private val panelVm: PanelViewModel by viewModels {
         PanelViewModel.factory(repo, tokenStore)
@@ -71,6 +72,13 @@ class MainActivity : ComponentActivity() {
         setContent {
             CallOnLinesTheme {
                 var loggedIn by remember { mutableStateOf(tokenStore.getToken() != null) }
+
+                LaunchedEffect(Unit) {
+                    tokenStore.sessionEnded.collectLatest {
+                        panelVm.clearState()
+                        loggedIn = false
+                    }
+                }
 
                 if (!loggedIn) {
                     LoginRoute(

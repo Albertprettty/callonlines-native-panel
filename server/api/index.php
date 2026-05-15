@@ -320,7 +320,8 @@ if ($action === 'password' && $method === 'POST') {
     $stored = (string)($result['rows'][0]['password'] ?? '');
 
     if (!PasswordUtil::passwordMatchesStored($cur, $stored)) {
-        Json::out(401, ['ok' => false, 'error' => 'La contraseña actual es incorrecta.']);
+        // 400: error de datos; 401 queda reservado a token JWT inválido (la app cierra sesión ante 401).
+        Json::out(400, ['ok' => false, 'error' => 'La contraseña actual es incorrecta.']);
     }
 
     $sip = co_find_sip_for_user($mb, (int)$idUser);
