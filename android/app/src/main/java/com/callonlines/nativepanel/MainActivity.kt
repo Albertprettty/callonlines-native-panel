@@ -75,6 +75,7 @@ class MainActivity : ComponentActivity() {
                 if (!loggedIn) {
                     LoginRoute(
                         repo = repo,
+                        tokenStore = tokenStore,
                         onLoggedIn = {
                             panelVm.clearState()
                             loggedIn = true
@@ -117,6 +118,7 @@ private fun sipAllText(me: MeResponse): String {
 @Composable
 private fun LoginRoute(
     repo: PanelRepository,
+    tokenStore: TokenStore,
     onLoggedIn: () -> Unit,
 ) {
     var user by remember { mutableStateOf("") }
