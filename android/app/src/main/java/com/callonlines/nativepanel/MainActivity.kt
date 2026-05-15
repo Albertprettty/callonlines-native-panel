@@ -12,6 +12,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -207,6 +208,188 @@ private fun LoginRoute(
 }
 
 @Composable
+private fun ColumnScope.PanelBody(
+    ui: PanelUiState,
+    vm: PanelViewModel,
+    ctx: Context,
+    onLogout: () -> Unit,
+    openUrl: (String) -> Unit,
+) {
+    ui.error?.let {
+        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
+            Text(it, Modifier.padding(12.dp))
+        }
+        Spacer(Modifier.height(8.dp))
+    }
+
+    ui.message?.let {
+        Card {
+            Text(it, Modifier.padding(12.dp))
+        }
+        Spacer(Modifier.height(8.dp))
+    }
+
+    val me = ui.me ?: return
+
+    if (me.lowBalance == true) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+        ) {
+            Column(Modifier.padding(14.dp)) {
+                Text("Saldo bajo", fontWeight = FontWeight.Bold)
+                Text("Recarga para evitar cortes en el servicio.", style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+    }
+
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp)) {
+            Text("Saldo actual", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "$${me.balanceFormatted ?: "—"} USD",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+    }
+
+    Spacer(Modifier.height(12.dp))
+
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp)) {
+            Text("Acciones rápidas", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "Recarga y copia de datos SIP (como en el panel web).",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+            )
+            Spacer(Modifier.height(12.dp))
+            val links = me.links
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                links?.rechargeWeb?.let { url ->
+                    Button(onClick = { openUrl(url) }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Recargar (web)")
+                    }
+                }
+                links?.rechargeWhatsapp?.let { url ->
+                    OutlinedButton(onClick = { openUrl(url) }, modifier = Modifier.fillMaxWidth()) {
+                        Text("WhatsApp recarga")
+                    }
+                }
+                OutlinedButton(
+                    onClick = { copyLabel(ctx, "SIP", sipAllText(me)) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Copiar TODO SIP")
+                }
+                OutlinedButton(
+                    onClick = {
+                        copyLabel(ctx, "Usuario SIP", me.sip?.username.orEmpty())
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Copiar usuario SIP")
+                }
+            }
+        }
+    }
+
+    Spacer(Modifier.height(12.dp))
+
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp)) {
+            Text("CallerID", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "Número que se muestra en llamadas salientes.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+            )
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(
+                value = ui.callerDraft,
+                onValueChange = vm::setCallerDraft,
+                label = { Text("Nuevo CallerID (6–16 dígitos)") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(10.dp))
+            Button(
+                onClick = { vm.saveCallerId { } },
+                enabled = !ui.loading,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Actualizar CallerID")
+            }
+        }
+    }
+
+    Spacer(Modifier.height(12.dp))
+
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp)) {
+            Text("Detalles SIP", style = MaterialTheme.typography.titleMedium)
+            val sip = me.sip
+            Text("Usuario: ${sip?.username.orEmpty()}")
+            Text("Servidor: ${sip?.server.orEmpty()}")
+            Text("Puerto: ${sip?.port.orEmpty()}")
+            Text("CallerID: ${sip?.callerid.orEmpty().ifBlank { "—" }}")
+        }
+    }
+
+    Spacer(Modifier.height(12.dp))
+
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp)) {
+            Text("Cambiar contraseña", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "Actualiza la clave del usuario y el SIP. Deja nueva vacía para generar una automática (cerrará sesión).",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+            )
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(
+                value = ui.passCurrent,
+                onValueChange = vm::setPassCurrent,
+                label = { Text("Contraseña actual") },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(
+                value = ui.passNew,
+                onValueChange = vm::setPassNew,
+                label = { Text("Nueva (opcional)") },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(
+                value = ui.passConfirm,
+                onValueChange = vm::setPassConfirm,
+                label = { Text("Confirmar nueva") },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(10.dp))
+            Button(
+                onClick = {
+                    vm.changePassword {
+                        onLogout()
+                    }
+                },
+                enabled = !ui.loading && ui.passCurrent.isNotBlank(),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("Actualizar contraseña")
+            }
+        }
+    }
+}
+
+@Composable
 private fun PanelRoute(
     vm: PanelViewModel,
     onLogout: () -> Unit,
@@ -246,183 +429,11 @@ private fun PanelRoute(
 
         if (ui.loading && ui.me == null) {
             LinearProgressIndicator(Modifier.fillMaxWidth())
-            return@Column
+        } else {
+            PanelBody(ui, vm, ctx, onLogout, openUrl)
         }
 
-        ui.error?.let {
-            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
-                Text(it, Modifier.padding(12.dp))
-            }
-            Spacer(Modifier.height(8.dp))
-        }
-
-        ui.message?.let {
-            Card {
-                Text(it, Modifier.padding(12.dp))
-            }
-            Spacer(Modifier.height(8.dp))
-        }
-
-        val me = ui.me ?: return@Column
-
-        if (me.lowBalance == true) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
-            ) {
-                Column(Modifier.padding(14.dp)) {
-                    Text("Saldo bajo", fontWeight = FontWeight.Bold)
-                    Text("Recarga para evitar cortes en el servicio.", style = MaterialTheme.typography.bodySmall)
-                }
-            }
-            Spacer(Modifier.height(12.dp))
-        }
-
-        Card(Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(16.dp)) {
-                Text("Saldo actual", style = MaterialTheme.typography.titleMedium)
-                Text(
-                    "$${me.balanceFormatted ?: "—"} USD",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
-        }
-
-        Spacer(Modifier.height(12.dp))
-
-        Card(Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(16.dp)) {
-                Text("Acciones rápidas", style = MaterialTheme.typography.titleMedium)
-                Text(
-                    "Recarga y copia de datos SIP (como en el panel web).",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                )
-                Spacer(Modifier.height(12.dp))
-                val links = me.links
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    links?.rechargeWeb?.let { url ->
-                        Button(onClick = { openUrl(url) }, modifier = Modifier.fillMaxWidth()) {
-                            Text("Recargar (web)")
-                        }
-                    }
-                    links?.rechargeWhatsapp?.let { url ->
-                        OutlinedButton(onClick = { openUrl(url) }, modifier = Modifier.fillMaxWidth()) {
-                            Text("WhatsApp recarga")
-                        }
-                    }
-                    OutlinedButton(
-                        onClick = { copyLabel(ctx, "SIP", sipAllText(me)) },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text("Copiar TODO SIP")
-                    }
-                    OutlinedButton(
-                        onClick = {
-                            copyLabel(ctx, "Usuario SIP", me.sip?.username.orEmpty())
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text("Copiar usuario SIP")
-                    }
-                }
-            }
-        }
-
-        Spacer(Modifier.height(12.dp))
-
-        Card(Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(16.dp)) {
-                Text("CallerID", style = MaterialTheme.typography.titleMedium)
-                Text(
-                    "Número que se muestra en llamadas salientes.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                )
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = ui.callerDraft,
-                    onValueChange = vm::setCallerDraft,
-                    label = { Text("Nuevo CallerID (6–16 dígitos)") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Spacer(Modifier.height(10.dp))
-                Button(
-                    onClick = { vm.saveCallerId { } },
-                    enabled = !ui.loading,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text("Actualizar CallerID")
-                }
-            }
-        }
-
-        Spacer(Modifier.height(12.dp))
-
-        Card(Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(16.dp)) {
-                Text("Detalles SIP", style = MaterialTheme.typography.titleMedium)
-                val sip = me.sip
-                Text("Usuario: ${sip?.username.orEmpty()}")
-                Text("Servidor: ${sip?.server.orEmpty()}")
-                Text("Puerto: ${sip?.port.orEmpty()}")
-                Text("CallerID: ${sip?.callerid.orEmpty().ifBlank { "—" }}")
-            }
-        }
-
-        Spacer(Modifier.height(12.dp))
-
-        Card(Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(16.dp)) {
-                Text("Cambiar contraseña", style = MaterialTheme.typography.titleMedium)
-                Text(
-                    "Actualiza la clave del usuario y el SIP. Deja nueva vacía para generar una automática (cerrará sesión).",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                )
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = ui.passCurrent,
-                    onValueChange = vm::setPassCurrent,
-                    label = { Text("Contraseña actual") },
-                    visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = ui.passNew,
-                    onValueChange = vm::setPassNew,
-                    label = { Text("Nueva (opcional)") },
-                    visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = ui.passConfirm,
-                    onValueChange = vm::setPassConfirm,
-                    label = { Text("Confirmar nueva") },
-                    visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Spacer(Modifier.height(10.dp))
-                Button(
-                    onClick = {
-                        vm.changePassword {
-                            onLogout()
-                        }
-                    },
-                    enabled = !ui.loading && ui.passCurrent.isNotBlank(),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text("Actualizar contraseña")
-                }
-            }
-        }
-
-        if (ui.loading) {
+        if (ui.loading && ui.me != null) {
             Spacer(Modifier.height(12.dp))
             CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally))
         }
