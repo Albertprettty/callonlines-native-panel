@@ -8,6 +8,8 @@ on:
 jobs:
   apk:
     runs-on: ubuntu-latest
+    env:
+      GRADLE_OPTS: -Xmx4g -Dorg.gradle.daemon=false -Dkotlin.daemon.jvm.options=-Xmx2g
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,8 +20,14 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      # Por defecto solo instala tools + platform-tools; AGP necesita platform y build-tools.
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
+        with:
+          packages: "tools platform-tools platforms;android-34 build-tools;34.0.0"
+
+      - name: Point Gradle to the SDK
+        run: echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
 
       - name: Grant execute permission for gradlew
         run: chmod +x android/gradlew
