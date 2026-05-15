@@ -8,6 +8,7 @@ on:
 jobs:
   apk:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     env:
       GRADLE_OPTS: -Xmx4g -Dorg.gradle.daemon=false -Dkotlin.daemon.jvm.options=-Xmx2g
     steps:
@@ -20,17 +21,24 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      # Por defecto solo instala tools + platform-tools; AGP necesita platform y build-tools.
+      # Instala cmdline-tools, licencias y platform-tools.
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
-        with:
-          packages: "tools platform-tools platforms;android-34 build-tools;34.0.0"
+
+      # Refuerzo: asegura API 34 + build-tools (el fallo típico del primer build).
+      - name: Install Android SDK Platform 34 + Build-Tools
+        run: sdkmanager --install "platforms;android-34" "build-tools;34.0.0"
 
       - name: Point Gradle to the SDK
         run: echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
 
       - name: Grant execute permission for gradlew
         run: chmod +x android/gradlew
+
+      - name: Setup Gradle (cache + validación wrapper)
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          build-root-directory: android
 
       - name: Build debug APK
         working-directory: android
