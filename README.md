@@ -1,5 +1,15 @@
 # CallOnLines — Panel cliente nativo + API JSON
 
+## Estado del repo (local)
+
+Este proyecto ya está en tu Mac con **Git inicializado** y el **primer commit** hecho:
+
+**Ruta:** `~/Desktop/callonlines-native-panel`
+
+Desde aquí solo falta **crear el repositorio vacío en GitHub** y hacer `git push` (yo no puedo entrar a tu cuenta GitHub desde aquí). Los comandos están más abajo en la sección **Publicar en GitHub**.
+
+---
+
 App **Android** (Kotlin + Compose) que pide **usuario y contraseña** y luego muestra las funciones del **panel cliente** (saldo, CallerID, SIP, recargas, cambio de clave). La app habla con una **API JSON en PHP** que tú subes al mismo servidor donde está Magnus (`vendor/`).
 
 ## Estructura
