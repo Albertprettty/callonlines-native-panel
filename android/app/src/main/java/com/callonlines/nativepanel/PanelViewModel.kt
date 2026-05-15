@@ -35,6 +35,11 @@ class PanelViewModel(
         _ui.value = PanelUiState()
     }
 
+    /** Tras login correcto: evita me=null y loading=false (PanelBody vacío) hasta que llegue /me. */
+    fun resetForDashboardEntry() {
+        _ui.value = PanelUiState(loading = true)
+    }
+
     fun clearToast() {
         _ui.value = _ui.value.copy(message = null, error = null, lastGeneratedPassword = null)
     }

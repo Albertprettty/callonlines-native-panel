@@ -92,7 +92,7 @@ class MainActivity : ComponentActivity() {
                             repo = repo,
                             tokenStore = tokenStore,
                             onLoggedIn = {
-                                panelVm.clearState()
+                                panelVm.resetForDashboardEntry()
                                 loggedIn = true
                             },
                         )
@@ -101,6 +101,7 @@ class MainActivity : ComponentActivity() {
                             vm = panelVm,
                             onLogout = {
                                 tokenStore.clear()
+                                panelVm.clearState()
                                 loggedIn = false
                             },
                             openUrl = { url ->
@@ -458,15 +459,39 @@ private fun PanelRoute(
             Text("Cerrar sesión")
         }
 
-        if (ui.loading && ui.me == null) {
-            LinearProgressIndicator(Modifier.fillMaxWidth())
-        } else {
-            PanelBody(ui, vm, ctx, onLogout, openUrl)
-        }
-
-        if (ui.loading && ui.me != null) {
-            Spacer(Modifier.height(12.dp))
-            CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally))
+        when {
+            ui.me != null -> {
+                PanelBody(ui, vm, ctx, onLogout, openUrl)
+                if (ui.loading) {
+                    Spacer(Modifier.height(12.dp))
+                    CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally))
+                }
+            }
+            ui.error != null && !ui.loading -> {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                ) {
+                    Text(
+                        ui.error ?: "",
+                        Modifier.padding(16.dp),
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                }
+                Spacer(Modifier.height(12.dp))
+                Button(onClick = { vm.refresh() }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Reintentar")
+                }
+            }
+            else -> {
+                LinearProgressIndicator(Modifier.fillMaxWidth())
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    "Cargando panel…",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }
