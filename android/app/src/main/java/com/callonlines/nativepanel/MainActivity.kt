@@ -32,6 +32,8 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -71,35 +73,41 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             CallOnLinesTheme {
-                var loggedIn by remember { mutableStateOf(tokenStore.getToken() != null) }
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background,
+                    contentColor = MaterialTheme.colorScheme.onBackground,
+                ) {
+                    var loggedIn by remember { mutableStateOf(tokenStore.getToken() != null) }
 
-                LaunchedEffect(Unit) {
-                    tokenStore.sessionEnded.collectLatest {
-                        panelVm.clearState()
-                        loggedIn = false
-                    }
-                }
-
-                if (!loggedIn) {
-                    LoginRoute(
-                        repo = repo,
-                        tokenStore = tokenStore,
-                        onLoggedIn = {
+                    LaunchedEffect(Unit) {
+                        tokenStore.sessionEnded.collectLatest {
                             panelVm.clearState()
-                            loggedIn = true
-                        },
-                    )
-                } else {
-                    PanelRoute(
-                        vm = panelVm,
-                        onLogout = {
-                            tokenStore.clear()
                             loggedIn = false
-                        },
-                        openUrl = { url ->
-                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-                        },
-                    )
+                        }
+                    }
+
+                    if (!loggedIn) {
+                        LoginRoute(
+                            repo = repo,
+                            tokenStore = tokenStore,
+                            onLoggedIn = {
+                                panelVm.clearState()
+                                loggedIn = true
+                            },
+                        )
+                    } else {
+                        PanelRoute(
+                            vm = panelVm,
+                            onLogout = {
+                                tokenStore.clear()
+                                loggedIn = false
+                            },
+                            openUrl = { url ->
+                                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                            },
+                        )
+                    }
                 }
             }
         }
@@ -154,6 +162,18 @@ private fun LoginRoute(
         )
         Spacer(Modifier.height(24.dp))
 
+        val fieldColors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+            focusedLabelColor = MaterialTheme.colorScheme.primary,
+            unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            cursorColor = MaterialTheme.colorScheme.primary,
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+        )
+
         OutlinedTextField(
             value = user,
             onValueChange = { user = it },
@@ -161,6 +181,7 @@ private fun LoginRoute(
             placeholder = { Text("Ej: cliente001 o @cliente001") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
+            colors = fieldColors,
         )
         Spacer(Modifier.height(12.dp))
         OutlinedTextField(
@@ -171,6 +192,7 @@ private fun LoginRoute(
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             modifier = Modifier.fillMaxWidth(),
+            colors = fieldColors,
         )
         err?.let {
             Spacer(Modifier.height(12.dp))

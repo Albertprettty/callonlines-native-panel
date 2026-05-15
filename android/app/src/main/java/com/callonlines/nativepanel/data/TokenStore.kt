@@ -40,18 +40,19 @@ class TokenStore(context: Context) {
         if (prefs.getString(KEY_JWT, null) != null) return
         val legacy = app.getSharedPreferences(PREFS_NAME_LEGACY, Context.MODE_PRIVATE)
         val token = legacy.getString(KEY_JWT, null) ?: return
-        prefs.edit().putString(KEY_JWT, token).apply()
-        legacy.edit().remove(KEY_JWT).apply()
+        prefs.edit().putString(KEY_JWT, token).commit()
+        legacy.edit().remove(KEY_JWT).commit()
     }
 
     fun getToken(): String? = prefs.getString(KEY_JWT, null)
 
     fun saveToken(token: String) {
-        prefs.edit().putString(KEY_JWT, token).apply()
+        // commit(): el panel llama a /me al instante; apply() puede dejar el JWT aún no persistido → 401.
+        prefs.edit().putString(KEY_JWT, token).commit()
     }
 
     fun clear() {
-        prefs.edit().remove(KEY_JWT).apply()
+        prefs.edit().remove(KEY_JWT).commit()
     }
 
     /** Llamado cuando la API responde 401: borra token y avisa para volver al login. */
