@@ -9,7 +9,9 @@ import com.callonlines.nativepanel.data.TokenStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 data class PanelUiState(
     val loading: Boolean = false,
@@ -46,21 +48,25 @@ class PanelViewModel(
 
     fun refresh() {
         viewModelScope.launch {
-            _ui.value = _ui.value.copy(loading = true, error = null)
+            withContext(Dispatchers.Main.immediate) {
+                _ui.value = _ui.value.copy(loading = true, error = null)
+            }
             val res = repo.loadMe()
-            res.fold(
-                onSuccess = { me ->
-                    val caller = me.sip?.callerid.orEmpty()
-                    _ui.value = PanelUiState(
-                        loading = false,
-                        me = me,
-                        callerDraft = caller,
-                    )
-                },
-                onFailure = { e ->
-                    _ui.value = PanelUiState(loading = false, error = e.message ?: "Error")
-                },
-            )
+            withContext(Dispatchers.Main.immediate) {
+                res.fold(
+                    onSuccess = { me ->
+                        val caller = me.sip?.callerid.orEmpty()
+                        _ui.value = PanelUiState(
+                            loading = false,
+                            me = me,
+                            callerDraft = caller,
+                        )
+                    },
+                    onFailure = { e ->
+                        _ui.value = PanelUiState(loading = false, error = e.message ?: "Error")
+                    },
+                )
+            }
         }
     }
 
@@ -82,45 +88,53 @@ class PanelViewModel(
 
     fun saveCallerId(onDone: (String?) -> Unit) {
         viewModelScope.launch {
-            _ui.value = _ui.value.copy(loading = true, error = null, message = null)
+            withContext(Dispatchers.Main.immediate) {
+                _ui.value = _ui.value.copy(loading = true, error = null, message = null)
+            }
             val res = repo.updateCallerId(_ui.value.callerDraft)
-            res.fold(
-                onSuccess = {
-                    _ui.value = _ui.value.copy(loading = false, message = "CallerID actualizado")
-                    refresh()
-                    onDone(null)
-                },
-                onFailure = { e ->
-                    _ui.value = _ui.value.copy(loading = false, error = e.message)
-                    onDone(e.message)
-                },
-            )
+            withContext(Dispatchers.Main.immediate) {
+                res.fold(
+                    onSuccess = {
+                        _ui.value = _ui.value.copy(loading = false, message = "CallerID actualizado")
+                        refresh()
+                        onDone(null)
+                    },
+                    onFailure = { e ->
+                        _ui.value = _ui.value.copy(loading = false, error = e.message)
+                        onDone(e.message)
+                    },
+                )
+            }
         }
     }
 
     fun changePassword(onMustRelogin: (generated: String?) -> Unit) {
         viewModelScope.launch {
-            _ui.value = _ui.value.copy(loading = true, error = null, message = null)
+            withContext(Dispatchers.Main.immediate) {
+                _ui.value = _ui.value.copy(loading = true, error = null, message = null)
+            }
             val s = _ui.value
             val res = repo.changePassword(s.passCurrent, s.passNew, s.passConfirm)
-            res.fold(
-                onSuccess = { r ->
-                    val gen = r.generatedPassword
-                    tokenStore.clear()
-                    onMustRelogin(gen)
-                    _ui.value = PanelUiState(
-                        lastGeneratedPassword = gen,
-                        message = if (gen != null) {
-                            "Nueva clave generada (guárdala): $gen"
-                        } else {
-                            "Contraseña actualizada. Inicia sesión de nuevo."
-                        },
-                    )
-                },
-                onFailure = { e ->
-                    _ui.value = _ui.value.copy(loading = false, error = e.message)
-                },
-            )
+            withContext(Dispatchers.Main.immediate) {
+                res.fold(
+                    onSuccess = { r ->
+                        val gen = r.generatedPassword
+                        tokenStore.clear()
+                        onMustRelogin(gen)
+                        _ui.value = PanelUiState(
+                            lastGeneratedPassword = gen,
+                            message = if (gen != null) {
+                                "Nueva clave generada (guárdala): $gen"
+                            } else {
+                                "Contraseña actualizada. Inicia sesión de nuevo."
+                            },
+                        )
+                    },
+                    onFailure = { e ->
+                        _ui.value = _ui.value.copy(loading = false, error = e.message)
+                    },
+                )
+            }
         }
     }
 

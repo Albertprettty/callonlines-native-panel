@@ -56,8 +56,10 @@ import com.callonlines.nativepanel.data.NetworkModule
 import com.callonlines.nativepanel.data.PanelRepository
 import com.callonlines.nativepanel.data.TokenStore
 import com.callonlines.nativepanel.ui.theme.CallOnLinesTheme
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
 
@@ -207,17 +209,19 @@ private fun LoginRoute(
                 loading = true
                 scope.launch {
                     val r = repo.login(user, pass)
-                    loading = false
-                    r.fold(
-                        onSuccess = { login ->
-                            tokenStore.saveToken(login.token!!)
-                            Toast.makeText(ctx, "Bienvenido", Toast.LENGTH_SHORT).show()
-                            onLoggedIn()
-                        },
-                        onFailure = { e ->
-                            err = e.message ?: "Error de acceso"
-                        },
-                    )
+                    withContext(Dispatchers.Main.immediate) {
+                        loading = false
+                        r.fold(
+                            onSuccess = { login ->
+                                tokenStore.saveToken(login.token!!)
+                                Toast.makeText(ctx, "Bienvenido", Toast.LENGTH_SHORT).show()
+                                onLoggedIn()
+                            },
+                            onFailure = { e ->
+                                err = e.message ?: "Error de acceso"
+                            },
+                        )
+                    }
                 }
             },
             enabled = !loading && user.isNotBlank() && pass.isNotBlank(),
